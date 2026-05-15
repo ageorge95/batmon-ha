@@ -278,9 +278,13 @@ class BtBms:
         # re-create the client because we use our own addr-to-device resolving (with the shared scanner)
         dev = await resolve_address(self.address, adapter=self._adapter, timeout=timeout)
         if dev is None:
-            self.logger.warning('%s: device %s not discovered from adapter %r, trying to connect anyway', self.name, self.address,
+            self.logger.warning('%s: device %s not discovered from adapter %r, trying to connect anyway', self.name,
+                                self.address,
                                 self._adapter or "default")
-            await (await get_shared_scanner(self._adapter)).stop()
+            # Removing the explicit stop keeps the scanner cache alive for subsequent devices.
+            # await (await get_shared_scanner(self._adapter)).stop()
+
+            # prior comments which may not apply now
             # ^ stop scanner to prevent
             # ^ `bleak.exc.BleakDBusError: [org.bluez.Error.InProgress] Operation already in progress`
 
@@ -361,7 +365,7 @@ class BtBms:
             raise RuntimeError("in shutdown")
 
         from bmslib.scan import get_shared_scanner
-        scanner = await get_shared_scanner(self._adapter, restart=True)
+        scanner = await get_shared_scanner(self._adapter, restart=False)
         await asyncio.sleep(1)
 
         attempt = 1
