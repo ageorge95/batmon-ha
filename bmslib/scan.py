@@ -26,8 +26,10 @@ async def get_shared_scanner(adapter=None, restart=False, **kwargs) -> BleakScan
             sc = BleakScanner(adapter=adapter, **kwargs) if adapter else BleakScanner(**kwargs)
 
             async def _stop(self, stop):
-                await stop()
-                self._stopped = True
+                # only attempt to stop if not already stopped to avoid stopping an invalid adapter
+                if not hasattr(self, '_stopped') or not self._stopped:
+                    await stop()
+                    self._stopped = True
 
             sc.stop = partial(_stop, sc, sc.stop)
             _scanners[adapter] = sc, time.time()
