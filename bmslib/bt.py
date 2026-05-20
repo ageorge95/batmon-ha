@@ -394,14 +394,6 @@ class BtBms:
     async def disconnect(self):
         self._in_disconnect = True
         await self.client.disconnect()
-
-        # Force close the platform backend to release the handle immediately (Windows)
-        if hasattr(self.client, '_backend') and self.client._backend is not None:
-            try:
-                await asyncio.wait_for(self.client._backend.close(), timeout=2)
-            except Exception as e:
-                self.logger.warning("backend close failed: %s", e)
-
         self._in_disconnect = False
         self._fetch_futures.clear()
 
